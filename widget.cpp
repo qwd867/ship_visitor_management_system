@@ -13,10 +13,6 @@ Widget::Widget(QWidget *parent) :
     /*****注册访客数据库*****/
     qDebug() << QSqlDatabase::drivers();
     db_visitor = QSqlDatabase::addDatabase("QSQLITE","connection_db_visitor");//创建QSqlite数据库连接,命名：数据库连接名connection_db_visitor
-    /*db_visitor.setHostName("localhost");//主机服务器
-    db_visitor.setPort(3306);//端口
-    db_visitor.setUserName("root");//用户名
-    db_visitor.setPassword("062888");//密码*/
     db_visitor.setDatabaseName("visitor.db");//数据库名
     qDebug() << "创建了visitor.db";
 
@@ -40,12 +36,7 @@ Widget::Widget(QWidget *parent) :
     initControl();
 
     /*****构建UI菜单布局*****/
-    /*hBoxLayout_main->addWidget(listWidget_myList);
-    hBoxLayout_main->addWidget(stackedWidget_myWidget);
-    hBoxLayout_main->setStretchFactor(listWidget_myList,2);
-    hBoxLayout_main->setStretchFactor(stackedWidget_myWidget,9);*/
    gridLayout_main->addWidget(listWidget_myList,0,0);
-   //listWidget_myList->setFixedSize(QSize(150,500));
    gridLayout_main->setColumnStretch(0,0);
    gridLayout_main->addWidget(stackedWidget_myWidget,0,1);
    gridLayout_main->setColumnStretch(1,3);
@@ -58,7 +49,6 @@ Widget::Widget(QWidget *parent) :
     initPage3();
     initPage4();
     initStacked();//必须放在所有init最后，否则显示不出来
-
 
     /*****将布局显示在上面*****/
     this->setLayout(gridLayout_main);
@@ -140,14 +130,12 @@ void Widget::initControl()
     cur_HistoryPage = 1;
     all_HistoryPage = 1;
 
-
     /*****page4*****/
     widget_Page4 = new QWidget;
 }
 
 void Widget::initMenu()
 {
-
     listWidget_myList->addItem("管理员");
     listWidget_myList->addItem("人脸登记");
     listWidget_myList->addItem("手动登记");
@@ -155,8 +143,6 @@ void Widget::initMenu()
     listWidget_myList->addItem("切换账号");
     listWidget_myList->setFont(QFont("song", 14));
 }
-
-
 
 void Widget::initPage0()
 {
@@ -234,24 +220,16 @@ void Widget::initPage3()
     //添加UI信息
     button3_PageUp->setText("上一页");
     button3_PgeDown->setText("下一页");
-    label_CurAndAllPage->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);//label文本水平和竖直都居中
+    label_CurAndAllPage->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);//显示 “当前页数/总页数” 的label文本水平和竖直都居中
 
     //一定要指定数据库db_visitor，否则使用的是默认数据库，程序能执行，但会啥也查不出来！！
     model_History->setQuery("select identityCard,name,accessTime,departureTime,reason"
                             " from visitor_info order by records asc",db_visitor);
 
-    /*tableWidget_History->setModel(model_History);*/
 
-
-    //tableWidget_History->setParent(widget_Page3);
-
-
-
-    //tableWidget_History->resize(widget_Page3->size());
-
-    //tableWidget_History->setRowCount(12);
+    //设置列数
     tableWidget_History->setColumnCount(5);
-    //行标题
+    //设置每列标题
     QStringList stringList_Title;
     stringList_Title<<"身份证"<<"姓名"<<"访问时间"<<"离开时间"<<"原因";
     tableWidget_History->setHorizontalHeaderLabels(stringList_Title);
@@ -281,32 +259,6 @@ void Widget::initPage3()
             tableWidget_History->setItem(rowCount,j,new QTableWidgetItem(model_History->record(i).value(j).toString()));
         }
     }
-
-    //槽函数
-    //点击上一页
-
-    //点击下一页
-
-    //m_QueryVec.push_back(model_History->record(2));
-    /*QVector<QSqlRecord>::iterator it =m_QueryVec.begin();
-    qDebug()<<"look here:"<<it->value("identityCard").toString();
-    if(it == m_QueryVec.end())
-    {
-        qDebug()<<"没有记录";
-        return;
-    }*/
-    /*for(;it!=m_QueryVec.end();++it)
-    {*/
-        /*int rowCount = tableWidget_History->rowCount();
-        tableWidget_History->insertRow(rowCount);
-        tableWidget_History->setRowHeight(rowCount,29);
-
-        tableWidget_History->setHorizontalHeaderLabels(stringList_Title);
-        QTableWidgetItem *item = new QTableWidgetItem(it->value("identityCard").toString());
-        tableWidget_History->setItem(rowCount,1,item);*/
-        //tableWidget_History->item(rowCount,1)->setBackgroundColor(QColor(255, 0, 0));
-
-   // }
 
     qDebug()<<"执行了！！！";
 }
@@ -367,25 +319,25 @@ void Widget::item_clicked(QListWidgetItem *item)
     int k = listWidget_myList->currentRow();
     switch (k) {
     case 0:
-
+        stackedWidget_myWidget->setCurrentWidget(widget_Page0);
+        qDebug()<<"stacked_page0 clicked!!!";
         break;
     case 1:
         stackedWidget_myWidget->setCurrentWidget(widget_Page1);
+        qDebug()<<"stacked_page1 clicked!!!";
         break;
     case 2:
         stackedWidget_myWidget->setCurrentWidget(widget_Page2);
-        qDebug()<<"page2";
+        qDebug()<<"stacked_page2 clicked!!!";
         break;
     case 3://来访记录更新后，要重新查一遍数据库,并更新tableWidget
         reCheckSql();
         stackedWidget_myWidget->setCurrentWidget(widget_Page3);
+        qDebug()<<"stacked_page3 clicked!!!";
         break;
     case 4:
-        //LoginWidget lgw;
-        //lgw.show();
-        //LoginWidget lgw;
         switch_accountsFunc();
-        qDebug()<<"clicked!!!";
+        qDebug()<<"stacked_page4 clicked!!!";
         break;
     default:
         qDebug()<<"error!!!";
@@ -506,7 +458,6 @@ void Widget::button3PageUp_clicked()
 
 void Widget::button3PageDown_clicked()
 {
-    //tableWidget_History->clear();
     tableWidget_History->setRowCount(0);
     if(all_HistoryCount <= per_HistoryCount)//只有一页
     {
@@ -533,6 +484,15 @@ void Widget::button3PageDown_clicked()
 
 void Widget::switch_accountsFunc()
 {
-    qDebug()<<"emit switch_accounts()";
-    emit switch_accountsSignal();
+    QMessageBox msgBox;
+    msgBox.setText("提示");
+    msgBox.setInformativeText("确定要切换账号吗?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::Yes);
+    int ret = msgBox.exec();
+    if(ret == QMessageBox::Yes)
+    {
+        qDebug()<<"emit switch_accounts()";
+        emit switch_accountsSignal();
+    }
 }
