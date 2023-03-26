@@ -268,6 +268,7 @@ void Widget::reCheckSql()
     //一定要指定数据库db_visitor，否则使用的是默认数据库，程序能执行，但会啥也查不出来！！
     model_History->setQuery("select identityCard,name,accessTime,departureTime,reason"
                             " from visitor_info order by records asc",db_visitor);
+
     all_HistoryCount = model_History->rowCount();//数据总量
     per_HistoryCount = 12;//每页数据量
     if(all_HistoryCount % per_HistoryCount == 0)//计算总页数
@@ -284,6 +285,17 @@ void Widget::reCheckSql()
     }
     label_CurAndAllPage->setText(QString("%1/%2").arg(cur_HistoryPage).arg(all_HistoryPage));
     tableWidget_History->setRowCount(0);
+
+    //如果没有数据
+    /***感觉可以有更好的判断方法，以后再看吧！！***/
+    if(model_History->record(0).value(0).isNull())
+    {
+        all_HistoryCount = 0;
+        all_HistoryPage = 1;
+        cur_HistoryPage = 1;
+        return;
+    }
+
     for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < 12+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
     {
         int rowCount = tableWidget_History->rowCount();
@@ -429,21 +441,24 @@ void Widget::button2Departure_clicked()
 }
 
 /*****page3*****/
-void Widget::button3PageUp_clicked()
+void Widget::button3PageUp_clicked()//上一页
 {
-    //tableWidget_History->clear();
-    tableWidget_History->setRowCount(0); //设置行数
-    if(all_HistoryCount<=per_HistoryCount)//只有一页
+    qDebug()<<"last_Page clicked";
+    //如果没有数据
+    if(model_History->record(0).value(0).isNull())
     {
         return;
     }
-    qDebug()<<"last_Page";
+
+    tableWidget_History->setRowCount(0); //设置行数
 
     --cur_HistoryPage;
     if(cur_HistoryPage < 1 )//如果是第一页
     {
         cur_HistoryPage = 1;
     }
+
+    //显示访问历史记录的for循环代码
     for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < 12+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
     {
         int rowCount = tableWidget_History->rowCount();
@@ -453,23 +468,29 @@ void Widget::button3PageUp_clicked()
             tableWidget_History->setItem(rowCount,j,new QTableWidgetItem(model_History->record(i).value(j).toString()));
         }
     }
+
     label_CurAndAllPage->setText(QString("%1/%2").arg(cur_HistoryPage).arg(all_HistoryPage));
 }
 
-void Widget::button3PageDown_clicked()
+void Widget::button3PageDown_clicked()//下一页
 {
-    tableWidget_History->setRowCount(0);
-    if(all_HistoryCount <= per_HistoryCount)//只有一页
+    qDebug()<<"next_Page clicked";
+    //如果没有数据
+    if(model_History->record(0).value(0).isNull())
     {
         return;
     }
-    qDebug()<<"next_Page";
+
+    tableWidget_History->setRowCount(0);
+
 
     ++cur_HistoryPage;
     if(cur_HistoryPage > all_HistoryPage )//如果是最后一页
     {
         cur_HistoryPage = all_HistoryPage;
     }
+
+    //显示访问历史记录的for循环代码
     for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < 12+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
     {
         int rowCount = tableWidget_History->rowCount();
@@ -479,6 +500,7 @@ void Widget::button3PageDown_clicked()
             tableWidget_History->setItem(rowCount,j,new QTableWidgetItem(model_History->record(i).value(j).toString()));
         }
     }
+
     label_CurAndAllPage->setText(QString("%1/%2").arg(cur_HistoryPage).arg(all_HistoryPage));
 }
 
