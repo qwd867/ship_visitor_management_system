@@ -28,7 +28,7 @@
 #include <QCameraImageCapture>
 
 //历史记录每页最大数量
-#define MAXCOUNTPERPAGE 12
+#define MAXCOUNTPERPAGE 8
 
 namespace Ui {
 class Widget;

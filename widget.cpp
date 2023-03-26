@@ -233,12 +233,19 @@ void Widget::initPage3()
     QStringList stringList_Title;
     stringList_Title<<"身份证"<<"姓名"<<"访问时间"<<"离开时间"<<"原因";
     tableWidget_History->setHorizontalHeaderLabels(stringList_Title);
+
+    // 表格列的大小随表格大小的变化而变化
+    tableWidget_History->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    // 表格行的大小随表格大小的变化而变化
+    tableWidget_History->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+
     //设置不可编辑
     tableWidget_History->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     //添加数据
     all_HistoryCount = model_History->rowCount();//数据总量
-    per_HistoryCount = 12;//每页数据量
+    per_HistoryCount = MAXCOUNTPERPAGE;//每页数据量
     if(all_HistoryCount % per_HistoryCount == 0)//计算总页数
     {
         all_HistoryPage = all_HistoryCount / per_HistoryCount;
@@ -250,7 +257,7 @@ void Widget::initPage3()
     label_CurAndAllPage->setText(QString("%1/%2").arg(cur_HistoryPage).arg(all_HistoryPage));
 
     //第一页显示的数据
-    for(int i = 0; i < 12; ++i)//行循环
+    for(int i = 0; i < MAXCOUNTPERPAGE; ++i)//行循环
     {
         int rowCount = tableWidget_History->rowCount();
         tableWidget_History->insertRow(rowCount);
@@ -270,7 +277,7 @@ void Widget::reCheckSql()
                             " from visitor_info order by records asc",db_visitor);
 
     all_HistoryCount = model_History->rowCount();//数据总量
-    per_HistoryCount = 12;//每页数据量
+    per_HistoryCount = MAXCOUNTPERPAGE;//每页数据量
     if(all_HistoryCount % per_HistoryCount == 0)//计算总页数
     {
         all_HistoryPage = all_HistoryCount / per_HistoryCount;
@@ -296,13 +303,14 @@ void Widget::reCheckSql()
         return;
     }
 
-    for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < 12+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
+    for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < MAXCOUNTPERPAGE+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
     {
         int rowCount = tableWidget_History->rowCount();
         tableWidget_History->insertRow(rowCount);
         for(int j = 0; j < 5; ++j)//列循环
         {
             tableWidget_History->setItem(rowCount,j,new QTableWidgetItem(model_History->record(i).value(j).toString()));
+            tableWidget_History->item(i,j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         }
     }
 }
@@ -459,7 +467,7 @@ void Widget::button3PageUp_clicked()//上一页
     }
 
     //显示访问历史记录的for循环代码
-    for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < 12+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
+    for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < MAXCOUNTPERPAGE+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
     {
         int rowCount = tableWidget_History->rowCount();
         tableWidget_History->insertRow(rowCount);
@@ -491,7 +499,7 @@ void Widget::button3PageDown_clicked()//下一页
     }
 
     //显示访问历史记录的for循环代码
-    for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < 12+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
+    for(int i = 0+(cur_HistoryPage-1)*per_HistoryCount; i < MAXCOUNTPERPAGE+(cur_HistoryPage-1)*per_HistoryCount; ++i)//行循环
     {
         int rowCount = tableWidget_History->rowCount();
         tableWidget_History->insertRow(rowCount);
