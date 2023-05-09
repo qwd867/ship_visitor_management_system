@@ -12,25 +12,43 @@ Widget::Widget(QWidget *parent) :
 
     /*****注册访客数据库*****/
     qDebug() << QSqlDatabase::drivers();
-    db_visitor = QSqlDatabase::addDatabase("QSQLITE","connection_db_visitor");//创建QSqlite数据库连接,命名：数据库连接名connection_db_visitor
-    db_visitor.setDatabaseName("visitor.db");//数据库名
-    qDebug() << "创建了visitor.db";
+    db_visitorCheck = QSqlDatabase::addDatabase("QSQLITE","connection_db_visitorCheck");//创建QSqlite数据库连接,命名：数据库连接名connection_db_visitor
+    db_visitorCheck.setDatabaseName("visitor.db");//数据库名
+    qDebug() << "创建了visitorCheck.db";
 
     /*****打开访客数据库*****/
-    if(db_visitor.open())//如果数据库成功打开
+    if(db_visitorCheck.open())//如果数据库成功打开
     {
         qDebug()<<"创建登录数据库成功！";
     }
     else
     {
-        qDebug()<<db_visitor.lastError();
+        qDebug()<<db_visitorCheck.lastError();
         exit(-1);
     }
 
     /*****创建表*****/
-    query_main = QSqlQuery(db_visitor);
+    query_main = QSqlQuery(db_visitorCheck);
     query_main.exec("create table if not exists visitor_info(records integer primary key autoincrement not null,identityCard int,name text,accessTime text,departureTime text,reason text)");
     qDebug()<<"成功创建db_visitor表";
+
+
+    /***注册管理员数据库***/
+    qDebug() << QSqlDatabase::drivers();
+    db_Login = QSqlDatabase::addDatabase("QSQLITE");//创建QSqlite数据库连接
+    db_Login.setDatabaseName("login.db");//数据库名
+    qDebug() << "创建了login.db";
+
+    /***打开管理员数据库***/
+    if(db_Login.open())//如果数据库成功打开
+    {
+        qDebug()<<"创建登录数据库成功！";
+    }
+    else
+    {
+        qDebug()<<db_Login.lastError();
+        exit(-1);
+    }
 
     /*****初始化控件*****/
     initControl();
@@ -56,6 +74,11 @@ Widget::Widget(QWidget *parent) :
 
     /*****槽函数*****/
     connect(listWidget_myList,SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(item_clicked(QListWidgetItem*)));
+    //page0
+    //点击上一页
+    connect(button0_PageUp,SIGNAL(clicked()),this,SLOT(button0PageUp_clicked()));
+    //点击下一页
+    connect(button0_PageDown,SIGNAL(clicked()),this,SLOT(button0PageDown_clicked()));
     //page2
     connect(button2_Add,SIGNAL(clicked()),this,SLOT(button2Add_clicked()));
     connect(button2_Departure,SIGNAL(clicked()),this,SLOT(button2Departure_clicked()));
@@ -63,7 +86,7 @@ Widget::Widget(QWidget *parent) :
     //点击上一页
     connect(button3_PageUp,SIGNAL(clicked()),this,SLOT(button3PageUp_clicked()));
     //点击下一页
-    connect(button3_PgeDown,SIGNAL(clicked()),this,SLOT(button3PageDown_clicked()));
+    connect(button3_PageDown,SIGNAL(clicked()),this,SLOT(button3PageDown_clicked()));
 }
 
 Widget::~Widget()
@@ -87,6 +110,17 @@ void Widget::initControl()
 
     /*****page0管理员控件*****/
     widget_Page0 = new QWidget;
+    vBoxLayout0_Page0 = new QVBoxLayout;
+    hBoxLayout0_Button = new QHBoxLayout;
+    model_Administrators = new QSqlQueryModel;
+    tableWidget_Administrators = new QTableWidget;
+    button0_PageUp = new QPushButton;
+    button0_PageDown = new QPushButton;
+    label_AdministratorsCurAndAllPage = new QLabel;
+    all_AdministratorsCount = 0;
+    per_AdministratorsCount = 0;
+    cur_AdministratorsPage = 1;
+    all_AdministratorsPage = 1;
 
     /*****page1控件*****/
     widget_Page1 = new QWidget;
@@ -123,7 +157,7 @@ void Widget::initControl()
     model_History = new QSqlQueryModel;
     tableWidget_History = new QTableWidget;
     button3_PageUp = new QPushButton;
-    button3_PgeDown = new QPushButton;
+    button3_PageDown = new QPushButton;
     label_CurAndAllPage = new QLabel;
     all_HistoryCount = 0;
     per_HistoryCount = 0;
@@ -132,6 +166,7 @@ void Widget::initControl()
 
     /*****page4*****/
     widget_Page4 = new QWidget;
+    vBoxLayout4_Page4 = new QVBoxLayout;
 }
 
 void Widget::initMenu()
@@ -146,7 +181,67 @@ void Widget::initMenu()
 
 void Widget::initPage0()
 {
+    //UI布局
+    hBoxLayout0_Button->addWidget(button0_PageUp);
+    hBoxLayout0_Button->addWidget(button0_PageDown);
+    hBoxLayout0_Button->addWidget(label_AdministratorsCurAndAllPage);
 
+    vBoxLayout0_Page0->addWidget(tableWidget_Administrators);
+    vBoxLayout0_Page0->addLayout(hBoxLayout0_Button);
+    widget_Page0->setLayout(vBoxLayout0_Page0);
+
+    //添加UI信息
+    button0_PageUp->setText("上一页");
+    button0_PageDown->setText("下一页");
+    label_AdministratorsCurAndAllPage ->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);//显示 “当前页数/总页数” 的label文本水平和竖直都居中
+
+    //一定要指定数据库db_visitor，否则使用的是默认数据库，程序能执行，但会啥也查不出来！！
+    model_Administrators->setQuery("select account_id,password from login_info order by account_id asc",db_Login);
+
+
+    //隐藏行头
+    tableWidget_Administrators->verticalHeader()->hide();
+    //设置列数
+    tableWidget_Administrators->setColumnCount(2);
+    //设置每列标题
+    QStringList stringList_Title;
+    stringList_Title<<"账号"<<"密码";
+    tableWidget_Administrators->setHorizontalHeaderLabels(stringList_Title);
+
+    // 表格列的大小随表格大小的变化而变化
+    tableWidget_Administrators->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    // 表格行的大小随表格大小的变化而变化
+    tableWidget_Administrators->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+
+    //设置不可编辑
+    tableWidget_Administrators->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    //添加数据
+    all_AdministratorsCount = model_Administrators->rowCount();//数据总量
+    per_AdministratorsCount = MAXCOUNTPERPAGE;//每页数据量
+    if(all_AdministratorsCount % per_AdministratorsCount == 0)//计算总页数
+    {
+        all_AdministratorsPage = all_AdministratorsCount / per_AdministratorsCount;
+    }
+    else
+    {
+        all_AdministratorsPage = (all_AdministratorsCount / per_AdministratorsCount) + 1;
+    }
+    label_AdministratorsCurAndAllPage->setText(QString("%1/%2").arg(cur_AdministratorsPage).arg(all_AdministratorsPage));
+
+    //第一页显示的数据
+    for(int i = 0; i < MAXCOUNTPERPAGE; ++i)//行循环
+    {
+        int rowCount = tableWidget_Administrators->rowCount();
+        tableWidget_Administrators->insertRow(rowCount);
+        for(int j = 0; j < 2; ++j)//列循环
+        {
+            tableWidget_Administrators->setItem(rowCount,j,new QTableWidgetItem(model_Administrators->record(i).value(j).toString()));
+        }
+    }
+
+    qDebug()<<"执行了！！！";
 }
 
 void Widget::initPage1()
@@ -208,7 +303,7 @@ void Widget::initPage3()
 {
     //UI布局
     hBoxLayout3_Button->addWidget(button3_PageUp);
-    hBoxLayout3_Button->addWidget(button3_PgeDown);
+    hBoxLayout3_Button->addWidget(button3_PageDown);
     hBoxLayout3_Button->addWidget(label_CurAndAllPage);
 
     vBoxLayout3_Page3->addWidget(tableWidget_History);
@@ -219,12 +314,12 @@ void Widget::initPage3()
 
     //添加UI信息
     button3_PageUp->setText("上一页");
-    button3_PgeDown->setText("下一页");
+    button3_PageDown->setText("下一页");
     label_CurAndAllPage->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);//显示 “当前页数/总页数” 的label文本水平和竖直都居中
 
     //一定要指定数据库db_visitor，否则使用的是默认数据库，程序能执行，但会啥也查不出来！！
     model_History->setQuery("select identityCard,name,accessTime,departureTime,reason"
-                            " from visitor_info order by records asc",db_visitor);
+                            " from visitor_info order by records asc",db_visitorCheck);
 
 
     //设置列数
@@ -274,7 +369,7 @@ void Widget::reCheckSql()
 {
     //一定要指定数据库db_visitor，否则使用的是默认数据库，程序能执行，但会啥也查不出来！！
     model_History->setQuery("select identityCard,name,accessTime,departureTime,reason"
-                            " from visitor_info order by records asc",db_visitor);
+                            " from visitor_info order by records asc",db_visitorCheck);
 
     all_HistoryCount = model_History->rowCount();//数据总量
     per_HistoryCount = MAXCOUNTPERPAGE;//每页数据量
@@ -310,7 +405,7 @@ void Widget::reCheckSql()
         for(int j = 0; j < 5; ++j)//列循环
         {
             tableWidget_History->setItem(rowCount,j,new QTableWidgetItem(model_History->record(i).value(j).toString()));
-            tableWidget_History->item(i,j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            //tableWidget_History->item(i,j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         }
     }
 }
@@ -331,7 +426,6 @@ void Widget::initStacked()
 
 
 //槽函数
-
 void Widget::item_clicked(QListWidgetItem *item)
 {
     item = new QListWidgetItem;
@@ -339,6 +433,7 @@ void Widget::item_clicked(QListWidgetItem *item)
     int k = listWidget_myList->currentRow();
     switch (k) {
     case 0:
+        reCheckSqlAdmin();
         stackedWidget_myWidget->setCurrentWidget(widget_Page0);
         qDebug()<<"stacked_page0 clicked!!!";
         break;
@@ -363,7 +458,115 @@ void Widget::item_clicked(QListWidgetItem *item)
         qDebug()<<"error!!!";
         break;
     }
+}
 
+
+/*****page0******/
+void Widget::button0PageUp_clicked()//上一页
+{
+    qDebug()<<"last_Page clicked";
+    //如果没有数据
+    if(model_Administrators->record(0).value(0).isNull())
+    {
+        return;
+    }
+
+    tableWidget_Administrators->setRowCount(0); //设置行数
+
+    --cur_AdministratorsPage;
+    if(cur_AdministratorsPage < 1 )//如果是第一页
+    {
+        cur_AdministratorsPage = 1;
+    }
+
+    //显示访问历史记录的for循环代码
+    for(int i = 0+(cur_AdministratorsPage-1)*per_AdministratorsCount; i < MAXCOUNTPERPAGE+(cur_AdministratorsPage-1)*per_AdministratorsCount; ++i)//行循环
+    {
+        int rowCount = tableWidget_Administrators->rowCount();
+        tableWidget_Administrators->insertRow(rowCount);
+        for(int j = 0; j < 5; ++j)//列循环
+        {
+            tableWidget_Administrators->setItem(rowCount,j,new QTableWidgetItem(model_Administrators->record(i).value(j).toString()));
+        }
+    }
+
+    label_CurAndAllPage->setText(QString("%1/%2").arg(cur_AdministratorsPage).arg(all_AdministratorsPage));
+}
+
+void Widget::button0PageDown_clicked()//下一页
+{
+    qDebug()<<"next_Page clicked";
+    //如果没有数据
+    if(model_Administrators->record(0).value(0).isNull())
+    {
+        return;
+    }
+
+    tableWidget_Administrators->setRowCount(0);
+
+
+    ++cur_AdministratorsPage;
+    if(cur_AdministratorsPage > all_AdministratorsPage)//如果是最后一页
+    {
+        cur_AdministratorsPage = all_AdministratorsPage;
+    }
+
+    //显示访问历史记录的for循环代码
+    for(int i = 0+(cur_AdministratorsPage-1)*per_AdministratorsCount; i < MAXCOUNTPERPAGE+(cur_AdministratorsPage-1)*per_AdministratorsCount; ++i)//行循环
+    {
+        int rowCount = tableWidget_Administrators->rowCount();
+        tableWidget_Administrators->insertRow(rowCount);
+        for(int j = 0; j < 5; ++j)//列循环
+        {
+            tableWidget_Administrators->setItem(rowCount,j,new QTableWidgetItem(model_Administrators->record(i).value(j).toString()));
+        }
+    }
+
+    label_CurAndAllPage->setText(QString("%1/%2").arg(cur_AdministratorsPage).arg(all_AdministratorsPage));
+}
+
+void Widget::reCheckSqlAdmin()
+{
+    //一定要指定数据库db_login，否则使用的是默认数据库，程序能执行，但会啥也查不出来！！
+    model_Administrators->setQuery("select account_id,password from login_info order by account_id asc",db_Login);
+
+    all_AdministratorsCount = model_Administrators->rowCount();//数据总量
+    per_AdministratorsCount = MAXCOUNTPERPAGE;//每页数据量
+    if(all_AdministratorsCount % per_AdministratorsCount == 0)//计算总页数
+    {
+        all_AdministratorsPage = all_AdministratorsCount / per_AdministratorsCount;
+    }
+    else
+    {
+        all_AdministratorsPage = (all_AdministratorsCount / per_AdministratorsCount) + 1;
+    }
+    if(cur_AdministratorsPage > all_AdministratorsPage )//如果是最后一页
+    {
+        cur_AdministratorsPage = all_AdministratorsPage;
+    }
+    label_AdministratorsCurAndAllPage->setText(QString("%1/%2").arg(cur_AdministratorsPage).arg(all_AdministratorsPage));
+    tableWidget_Administrators->setRowCount(0);
+
+    //如果没有数据
+    /***感觉可以有更好的判断方法，以后再看吧！！***/
+    if(model_Administrators->record(0).value(0).isNull())
+    {
+        all_AdministratorsCount = 0;
+        all_AdministratorsPage = 1;
+        cur_AdministratorsPage = 1;
+        return;
+    }
+
+    for(int i = 0+(cur_AdministratorsPage-1)*per_AdministratorsCount; i < MAXCOUNTPERPAGE+(cur_AdministratorsPage-1)*per_AdministratorsCount; ++i)//行循环
+    {
+        int rowCount = tableWidget_Administrators->rowCount();
+        tableWidget_Administrators->insertRow(rowCount);
+        for(int j = 0; j < 5; ++j)//列循环
+        {
+            tableWidget_Administrators->setItem(rowCount,j,new QTableWidgetItem(model_Administrators->record(i).value(j).toString()));
+            //tableWidget_History->item(i,j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        }
+    }
 }
 
 /*****page2*****/
@@ -427,9 +630,25 @@ void Widget::button2Departure_clicked()
         return;
     }
     int identityCard = le2_IdentityCard->text().toInt();
+
+    /*******2023/5/9 17:00修改*********/
+    //是否找到当前访问了并且未离开的访客
+    QString str_Verify = QString("select * from visitor_info where identityCard=123432 and departureTime is Null");
+    if(!query_main.exec(str_Verify)) //如果str_Departure的SQL语句执行错误
+    {
+        qDebug()<<query_main.lastError().text();
+        return;
+    }
+    if(!query_main.next())//如果没有找到此人
+    {
+        QMessageBox::information(this,"失败","未找到此人");
+        return;
+    }
+    /*******2023/5/9 17:00修改*********/
+
     QString currentTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss ddd");
     QString str_Departure = QString("update visitor_info set departureTime='%1' where records "
-                                    "IN(select MAX(records) from visitor_info where identityCard=%2)").arg(currentTime).arg(identityCard);
+                                    "IN(select MAX(records) from visitor_info where identityCard=%2 and departureTime is Null)").arg(currentTime).arg(identityCard);
     if(!query_main.exec(str_Departure)) //如果str_Departure的SQL语句执行错误
     {
         qDebug()<<query_main.lastError().text();

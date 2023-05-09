@@ -43,7 +43,6 @@ public:
     ~Widget();
 
 
-
 signals:
     void switch_accountsSignal();
 
@@ -51,6 +50,9 @@ private slots:
     void item_clicked(QListWidgetItem *item);
     void button2Add_clicked();
     void button2Departure_clicked();
+    //page0
+    void button0PageUp_clicked();
+    void button0PageDown_clicked();
     //page3
     void button3PageUp_clicked();
     void button3PageDown_clicked();
@@ -69,6 +71,18 @@ private:
     QGridLayout *gridLayout_main;
     //page0管理员控件
     QWidget *widget_Page0;
+    QVBoxLayout *vBoxLayout0_Page0;
+    QHBoxLayout *hBoxLayout0_Button;
+    QSqlQueryModel *model_Administrators;
+    QTableWidget *tableWidget_Administrators;
+    QSqlDatabase db_Login;
+    QPushButton *button0_PageUp;
+    QPushButton *button0_PageDown;
+    QLabel *label_AdministratorsCurAndAllPage;
+    int per_AdministratorsCount;//每页内容数量
+    int all_AdministratorsCount;//历史记录内容数量总计
+    int cur_AdministratorsPage;//当前页数
+    int all_AdministratorsPage;//总页数
 
     //page1控件
     QWidget *widget_Page1;
@@ -108,7 +122,7 @@ private:
     QTableWidget *tableWidget_History;
     //QStringList *stringList_Title;
     QPushButton *button3_PageUp;
-    QPushButton *button3_PgeDown;
+    QPushButton *button3_PageDown;
     QLabel *label_CurAndAllPage;
     int per_HistoryCount;//每页内容数量
     int all_HistoryCount;//历史记录内容数量总计
@@ -117,9 +131,10 @@ private:
 
     //page4控件
     QWidget *widget_Page4;
+    QVBoxLayout *vBoxLayout4_Page4;
 
     //历史访客数据库
-    QSqlDatabase db_visitor;
+    QSqlDatabase db_visitorCheck;
     QSqlQuery query_main;
     QSqlRecord record_main;
 
@@ -135,6 +150,8 @@ private:
     void initPage3();
     void reCheckSql();//重查数据库，并更新tableWidget，随时保证点击到page3时数据更新到最新
     void initPage4();
+public:
+    void reCheckSqlAdmin();//重查管理员数据库
 };
 
 #endif // WIDGET_H

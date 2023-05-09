@@ -29,7 +29,10 @@ LoginWidget::LoginWidget(QWidget *parent) :
 
     //添加组件信息
     label_Account->setText("账号: ");
+    lineEdit_Account->setPlaceholderText("请输入账号");
     label_Password->setText("密码: ");
+    lineEdit_Password->setPlaceholderText("请输入密码");
+    lineEdit_Password->setEchoMode(QLineEdit::Password);
 
     button_Login->setText("登录");
     button_Regist->setText("注册");
@@ -54,10 +57,6 @@ LoginWidget::LoginWidget(QWidget *parent) :
     //注册管理员数据库
     qDebug() << QSqlDatabase::drivers();
     db_Login = QSqlDatabase::addDatabase("QSQLITE","connection_db_login");//创建QSqlite数据库连接，命名：数据库连接名connection_db_login
-    /*db_Login.setHostName("localhost");//主机服务器
-    db_Login.setPort(3306);//端口
-    db_Login.setUserName("root");//用户名
-    db_Login.setPassword("062888");//密码*/
     db_Login.setDatabaseName("login.db");//数据库名
     qDebug() << "设置登录数据库名login.db";
 
@@ -90,23 +89,39 @@ LoginWidget::~LoginWidget()
 
 void LoginWidget::buttonLogin_clicked()
 {
+    //重查管理人员信息数据库，防止注册后再登录查询不到刚才注册的账号
+    w->reCheckSqlAdmin();
+
     if(lineEdit_Account->text().isEmpty()||lineEdit_Password->text().isEmpty())
     {
-        QMessageBox::information(this,"错误","请输入账号密码！");
+        QMessageBox::information(this,"登录","账号或密码为空！");
         return;
     }
 
     currentAccount = lineEdit_Account->text().toInt();
     currentPassword = lineEdit_Password->text();
 
+    QString str_Account = QString("select * from login_info where account_id=%1").arg(currentAccount);
     QString str_Password = QString("select * from login_info where account_id=%1 and password='%2'").arg(currentAccount).arg(currentPassword);
 
+    //账号是否存在
+    if(!query.exec(str_Account)) //SQL语句执行错误
+    {
+        qDebug()<<query.lastError().text();
+        return;
+    }
+    if(!query.next())//SQL语句执行正确，但没有查询到账号信息
+    {
+        QMessageBox::information(this,"登录","账号不存在！");
+        return;
+    }
+
+    //密码是否正确
     if(!query.exec(str_Password)) //SQL语句执行错误
     {
         qDebug()<<query.lastError().text();
         return;
     }
-
     if(query.next())//SQL语句执行正确，并查到相应信息
     {
         //QMessageBox::information(this,"登录","登录成功！");
@@ -115,7 +130,7 @@ void LoginWidget::buttonLogin_clicked()
     }
     else//SQL语句执行正确，并没有查到相应信息
     {
-        QMessageBox::information(this,"登录","账号或密码错误！");
+        QMessageBox::information(this,"登录","密码错误！");
     }
 }
 
@@ -126,7 +141,7 @@ void LoginWidget::buttonRegist_clicked()
 
 void LoginWidget::switch_accountsLgFunc()
 {
-    qDebug()<<"hi";
+    qDebug()<<"swtichAccount";
     this->show();
 
     w->close();//这里加了setAttribute(Qt::WA_DeleteOnClose);，真正在内存中删除了w

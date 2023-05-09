@@ -29,8 +29,11 @@ RegistWidget::RegistWidget(QWidget *parent) :
 
     //添加组件信息
     label_Account->setText("账号: ");
+    lineEdit_Account->setPlaceholderText("请输入账号");
     label_Password->setText("密码: ");
+    lineEdit_Password->setPlaceholderText("请输入密码");
     label_Administrator->setText("管理员密码:");
+    lineEdit_Administrator->setPlaceholderText("请输入管理员密码");
     button_OK->setText("确定");
     button_Cancel->setText("取消");
 
@@ -59,10 +62,6 @@ RegistWidget::RegistWidget(QWidget *parent) :
     //注册管理员数据库
     qDebug() << QSqlDatabase::drivers();
     db_Login = QSqlDatabase::addDatabase("QSQLITE");//创建QSqlite数据库连接
-    /*db_Login.setHostName("localhost");//主机服务器
-    db_Login.setPort(3306);//端口
-    db_Login.setUserName("root");//用户名
-    db_Login.setPassword("062888");//密码*/
     db_Login.setDatabaseName("login.db");//数据库名
     qDebug() << "创建了login.db";
 
@@ -100,6 +99,20 @@ void RegistWidget::buttonOK_clicked()
         return;
     }
 
+    //账号格式检验：账号长度大于等于8
+    if(lineEdit_Account->text().length()!=8)
+    {
+        QMessageBox::information(this,"账号长度错误","账号长度应等于8");
+        return;
+    }
+
+    //密码强度检验：密码长度大于等于8
+    if(lineEdit_Password->text().length()<8)
+    {
+        QMessageBox::information(this,"密码过于简单","密码长度应大于等于8");
+        return;
+    }
+
     //检查数据库是否存在相同账号
     currentAccount = lineEdit_Account->text().toInt();
     currentPassword = lineEdit_Password->text();
@@ -111,7 +124,6 @@ void RegistWidget::buttonOK_clicked()
         qDebug()<<query.lastError().text();
         return;
     }
-
 
     if(query.next())//如果str_account的SQL语句执行正确，并查到相应信息
     {
