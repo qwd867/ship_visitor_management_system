@@ -66,6 +66,7 @@ Widget::Widget(QWidget *parent) :
     initPage2();
     initPage3();
     initPage4();
+    initPage5();
     initStacked();//必须放在所有init最后，否则显示不出来
 
     /*****将布局显示在上面*****/
@@ -129,12 +130,16 @@ void Widget::initControl()
     hBoxLayout1_IdentityCard = new QHBoxLayout;
     hBoxLayout1_Name = new QHBoxLayout;
     hBoxLayout1_Reason = new QHBoxLayout;
+    hBoxLayout1_Button = new  QHBoxLayout;
     lab1_IdentityCard = new QLabel;
     le1_IdentityCard = new QLineEdit;
     lab1_Name = new QLabel;
     le1_Name = new QLineEdit;
     lab1_Reason = new QLabel;
     le1_Reason = new QLineEdit;
+    button1_Add = new QPushButton;
+    button1_Departure = new QPushButton;
+    button1_FaceRecognize = new QPushButton;
 
     /*****page2手动登记控件*****/
     widget_Page2 = new QWidget;
@@ -167,6 +172,19 @@ void Widget::initControl()
     /*****page4*****/
     widget_Page4 = new QWidget;
     vBoxLayout4_Page4 = new QVBoxLayout;
+
+    /*****page******/
+    widget_page5 = new QWidget;
+    vBoxLayout5_Page5 = new QVBoxLayout;
+    hBoxLayout5_ID = new  QHBoxLayout;
+    lab5_ID = new QLabel;
+    le5_ID = new QLineEdit;
+    hBoxLayout5_Name = new QHBoxLayout;
+    lab5_Name = new QLabel;
+    le5_Name = new QLineEdit;
+    hBoxLayout5_Button = new QHBoxLayout;
+    button5_FaceEntry = new QPushButton;
+    button5_Save = new QPushButton;
 }
 
 void Widget::initMenu()
@@ -176,6 +194,7 @@ void Widget::initMenu()
     listWidget_myList->addItem("手动登记");
     listWidget_myList->addItem("来访历史");
     listWidget_myList->addItem("切换账号");
+    listWidget_myList->addItem("录入人脸");
     listWidget_myList->setFont(QFont("song", 14));
 }
 
@@ -253,10 +272,14 @@ void Widget::initPage1()
     hBoxLayout1_Name->addWidget(le1_Name);
     hBoxLayout1_Reason->addWidget(lab1_Reason);
     hBoxLayout1_Reason->addWidget(le1_Reason);
+    hBoxLayout1_Button->addWidget(button1_FaceRecognize);
+    hBoxLayout1_Button->addWidget(button1_Add);
+    hBoxLayout1_Button->addWidget(button1_Departure);
 
     vBoxLayout_Page1->addLayout(hBoxLayout1_IdentityCard);
     vBoxLayout_Page1->addLayout(hBoxLayout1_Name);
     vBoxLayout_Page1->addLayout(hBoxLayout1_Reason);
+    vBoxLayout_Page1->addLayout(hBoxLayout1_Button);
 
     widget_Page1->setLayout(vBoxLayout_Page1);
 
@@ -270,6 +293,10 @@ void Widget::initPage1()
     le1_Name->setReadOnly(true);
 
     lab1_Reason->setText("原  因：");
+
+    button1_FaceRecognize->setText("人脸识别");
+    button1_Add->setText("访问");
+    button1_Departure->setText("离开");
 
 }
 
@@ -415,6 +442,31 @@ void Widget::initPage4()
 
 }
 
+void Widget::initPage5()
+{
+    //UI布局
+    hBoxLayout5_ID->addWidget(lab5_ID);
+    hBoxLayout5_ID->addWidget(le5_ID);
+
+    hBoxLayout5_Name->addWidget(lab5_Name);
+    hBoxLayout5_Name->addWidget(le5_Name);
+
+    hBoxLayout5_Button->addWidget(button5_FaceEntry);
+    hBoxLayout5_Button->addWidget(button5_Save);
+
+    vBoxLayout5_Page5->addLayout(hBoxLayout5_ID);
+    vBoxLayout5_Page5->addLayout(hBoxLayout5_Name);
+    vBoxLayout5_Page5->addLayout(hBoxLayout5_Button);
+
+    widget_page5->setLayout(vBoxLayout5_Page5);
+
+    //添加UI信息
+    lab5_ID->setText("编号：");
+    lab5_Name->setText("姓名：");
+    button5_FaceEntry->setText("录入人脸");
+    button5_Save->setText("保存");
+}
+
 void Widget::initStacked()
 {
     stackedWidget_myWidget->addWidget(widget_Page0);
@@ -422,6 +474,7 @@ void Widget::initStacked()
     stackedWidget_myWidget->addWidget(widget_Page2);
     stackedWidget_myWidget->addWidget(widget_Page3);
     stackedWidget_myWidget->addWidget(widget_Page4);
+    stackedWidget_myWidget->addWidget(widget_page5);
 }
 
 
@@ -453,6 +506,10 @@ void Widget::item_clicked(QListWidgetItem *item)
     case 4:
         switch_accountsFunc();
         qDebug()<<"stacked_page4 clicked!!!";
+        break;
+    case 5:
+        stackedWidget_myWidget->setCurrentWidget(widget_page5);
+        qDebug()<<"stacked_page5 clicked!!!";
         break;
     default:
         qDebug()<<"error!!!";

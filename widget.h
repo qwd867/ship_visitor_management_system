@@ -91,12 +91,14 @@ private:
     QHBoxLayout *hBoxLayout1_IdentityCard;
     QHBoxLayout *hBoxLayout1_Name;
     QHBoxLayout *hBoxLayout1_Reason;
+    QHBoxLayout *hBoxLayout1_Button;
     QLabel *lab1_IdentityCard;
     QLineEdit *le1_IdentityCard;
     QLabel *lab1_Name;
     QLineEdit *le1_Name;
     QLabel *lab1_Reason;
     QLineEdit *le1_Reason;
+    QPushButton *button1_FaceRecognize;
     QPushButton *button1_Add;
     QPushButton *button1_Departure;
 
@@ -133,6 +135,20 @@ private:
     QWidget *widget_Page4;
     QVBoxLayout *vBoxLayout4_Page4;
 
+    //page5
+    QWidget *widget_page5;
+    QVBoxLayout *vBoxLayout5_Page5;
+    QHBoxLayout *hBoxLayout5_ID;
+    QLabel *lab5_ID;
+    QLineEdit *le5_ID;
+    QHBoxLayout *hBoxLayout5_Name;
+    QLabel *lab5_Name;
+    QLineEdit *le5_Name;
+    QHBoxLayout *hBoxLayout5_Button;
+    QPushButton *button5_FaceEntry;
+    QPushButton *button5_Save;
+
+
     //历史访客数据库
     QSqlDatabase db_visitorCheck;
     QSqlQuery query_main;
@@ -150,6 +166,7 @@ private:
     void initPage3();
     void reCheckSql();//重查数据库，并更新tableWidget，随时保证点击到page3时数据更新到最新
     void initPage4();
+    void initPage5();
 public:
     void reCheckSqlAdmin();//重查管理员数据库
 };
